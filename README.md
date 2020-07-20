@@ -1,7 +1,10 @@
-# nCube-sparrow
+# nCube-steer
 Start Guide
 
-1. Install dependencies
+- Install dependencies 
+
+In the sparrow board
+ 
 ```
 $ curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
 
@@ -17,7 +20,9 @@ $ cd /home/pi/nCube-sparrow
 
 $ npm install
 ```
-2. Autorun at boot
+
+- Autorun at boot
+
 ```
 $ sudo nano /etc/xdg/lxsession/LXDE-pi/autostart
 

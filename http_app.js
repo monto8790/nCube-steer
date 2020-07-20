@@ -25,8 +25,8 @@ var moment = require('moment');
 global.sh_adn = require('./http_adn');
 var noti = require('./noti');
 var tas_mav = require('./thyme_tas_mav');
-var tas_sec = require('./thyme_tas_sec');
-var tas_mission = require('./thyme_tas_mission');
+//var tas_sec = require('./thyme_tas_sec');
+//var tas_mission = require('./thyme_tas_mission');
 
 
 var HTTP_SUBSCRIPTION_ENABLE = 0;
@@ -200,30 +200,30 @@ function create_sub_all(count, callback) {
 }
 
 function retrieve_my_cnt_name(callback) {
-    sh_adn.rtvct('/Mobius/UTM/approval/'+conf.ae.name+'/la', 0, function (rsc, res_body, count) {
+    sh_adn.rtvct('/Mobius/UTM/steer/'+conf.ae.name+'/la', 0, function (rsc, res_body, count) {
         if(rsc == 2000) {
-            var drone_info = res_body[Object.keys(res_body)[0]].con;
-            //console.log(drone_info);
-
+            var steer_info = res_body[Object.keys(res_body)[0]].con;
+            console.log(steer_info);
+/*
             conf.cnt = [];
 
-            my_gcs_name = drone_info.gcs;
+            my_gcs_name = steer_info.gcs;
 
             var info = {};
-            info.parent = '/Mobius/' + drone_info.gcs;
+            info.parent = '/Mobius/' + steer_info.gcs;
             info.name = 'Drone_Data';
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
-            info.parent = '/Mobius/' + drone_info.gcs;
+            info.parent = '/Mobius/' + steer_info.gcs;
             info.name = 'Mission_Data';
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
-            info.parent = '/Mobius/' + drone_info.gcs + '/Drone_Data';
-            info.name = drone_info.drone;
+            info.parent = '/Mobius/' + steer_info.gcs + '/Drone_Data';
+            info.name = steer_info.drone;
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
             // set container and subscription for security
-            info.parent = '/Mobius/' + drone_info.gcs + '/Drone_Data/' + drone_info.drone;
+            info.parent = '/Mobius/' + steer_info.gcs + '/Drone_Data/' + steer_info.drone;
             info.name = 'Req_auth';
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
             Req_auth = info.parent + '/' + info.name;
@@ -233,7 +233,7 @@ function retrieve_my_cnt_name(callback) {
             info.nu = 'mqtt://' + conf.cse.host + '/Sutm_auth?ct=json';
             conf.sub.push(JSON.parse(JSON.stringify(info)));
 
-            info.parent = '/Mobius/' + drone_info.gcs + '/Drone_Data/' + drone_info.drone;
+            info.parent = '/Mobius/' + steer_info.gcs + '/Drone_Data/' + steer_info.drone;
             info.name = 'Res_auth';
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
             Res_auth = info.parent + '/' + info.name;
@@ -243,17 +243,17 @@ function retrieve_my_cnt_name(callback) {
             info.nu = 'mqtt://' + conf.cse.host + '/' + conf.ae.id + '?ct=json';
             conf.sub.push(JSON.parse(JSON.stringify(info)));
 
-            info.parent = '/Mobius/' + drone_info.gcs + '/Drone_Data/' + drone_info.drone;
+            info.parent = '/Mobius/' + steer_info.gcs + '/Drone_Data/' + steer_info.drone;
             info.name = 'Result_auth';
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
             Result_auth = info.parent + '/' + info.name;
 
-            info.parent = '/Mobius/' + drone_info.gcs + '/Drone_Data/' + drone_info.drone;
+            info.parent = '/Mobius/' + steer_info.gcs + '/Drone_Data/' + steer_info.drone;
             info.name = 'Certification';
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
             Certification = info.parent + '/' + info.name;
 
-            info.parent = '/Mobius/' + drone_info.gcs + '/Drone_Data/' + drone_info.drone;
+            info.parent = '/Mobius/' + steer_info.gcs + '/Drone_Data/' + steer_info.drone;
             info.name = my_sortie_name;
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
@@ -264,12 +264,12 @@ function retrieve_my_cnt_name(callback) {
             //     console.log('delete container named disarm of drone');
             // });
 
-            info.parent = '/Mobius/' + drone_info.gcs + '/Mission_Data';
-            info.name = drone_info.drone;
+            info.parent = '/Mobius/' + steer_info.gcs + '/Mission_Data';
+            info.name = steer_info.drone;
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
             // default mission
-            info.parent = '/Mobius/' + drone_info.gcs + '/Mission_Data/' + drone_info.drone;
+            info.parent = '/Mobius/' + steer_info.gcs + '/Mission_Data/' + steer_info.drone;
             info.name = 'LTE';
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
@@ -284,13 +284,13 @@ function retrieve_my_cnt_name(callback) {
             info.name = 'disarm';
             conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
-            if(drone_info.hasOwnProperty('mission')) {
-                info.parent = '/Mobius/' + drone_info.gcs + '/Mission_Data/' + drone_info.drone;
-                info.name = drone_info.mission;
+            if(steer_info.hasOwnProperty('mission')) {
+                info.parent = '/Mobius/' + steer_info.gcs + '/Mission_Data/' + steer_info.drone;
+                info.name = steer_info.mission;
                 conf.cnt.push(JSON.parse(JSON.stringify(info)));
 
-                my_mission_parent = '/Mobius/' + drone_info.gcs + '/Mission_Data/' + drone_info.drone;
-                my_mission_name = drone_info.mission;
+                my_mission_parent = '/Mobius/' + steer_info.gcs + '/Mission_Data/' + steer_info.drone;
+                my_mission_name = steer_info.mission;
             }
             else {
                 my_mission_parent = '';
@@ -304,37 +304,33 @@ function retrieve_my_cnt_name(callback) {
                 conf.sub.push(JSON.parse(JSON.stringify(info)));
             }
 
-            if(drone_info.hasOwnProperty('mav_ver')) {
-                mav_ver = drone_info.mav_ver;
+            if(steer_info.hasOwnProperty('mav_ver')) {
+                mav_ver = steer_info.mav_ver;
             }
             else {
                 mav_ver = 1;
             }
 
-            if(drone_info.hasOwnProperty('type')) {
-                my_drone_type = drone_info.type;
+            if(steer_info.hasOwnProperty('type')) {
+                my_drone_type = steer_info.type;
             }
             else {
                 my_drone_type = 'pixhawk';
             }
 
-            if(drone_info.hasOwnProperty('secure')) {
-                my_secure = drone_info.secure;
+            if(steer_info.hasOwnProperty('secure')) {
+                my_secure = steer_info.secure;
             }
             else {
                 my_secure = 'off';
             }
-
-            gcs_noti_topic = '/Mobius/' + my_gcs_name + '/GCS_Data/' + drone_info.drone;
-            MQTT_SUBSCRIPTION_ENABLE = 1;
-            sh_state = 'crtct';
-            setTimeout(http_watchdog, normal_interval);
-            callback();
+*/
+            gcs_noti_topic = '/Mobius/' + my_gcs_name + '/GCS_Data/' + steer_info.drone;
+            callback('200');
         }
         else {
             console.log('x-m2m-rsc : ' + rsc + ' <----' + res_body);
-            setTimeout(http_watchdog, retry_interval);
-            callback();
+            callback('404');
         }
     });
 }
@@ -395,8 +391,15 @@ function http_watchdog() {
         });
     }
     else if(sh_state === 'rtvct') {
-        retrieve_my_cnt_name(function () {
-
+        retrieve_my_cnt_name(function (code) {
+            if(code == '200') {
+                MQTT_SUBSCRIPTION_ENABLE = 1;
+                sh_state = 'crtct';
+                setTimeout(http_watchdog, normal_interval);
+            }
+            else {
+                setTimeout(http_watchdog, retry_interval);
+            }
         });
     }
     else if (sh_state === 'crtct') {
@@ -452,8 +455,10 @@ function http_watchdog() {
                     ready_for_notification();
 
                     tas_mav.ready();
-                    tas_sec.ready();
-                    tas_mission.ready();
+                    //tas_sec.ready();
+                    //tas_mission.ready();
+
+                    console.log('[sh_state] : ' + sh_state);
 
                     setTimeout(http_watchdog, normal_interval);
                 }
@@ -467,10 +472,6 @@ function http_watchdog() {
 
 setTimeout(http_watchdog, normal_interval);
 
-function check_rtv_cnt() {
-    sh_state = 'rtvct';
-    http_watchdog();
-}
 
 // for notification
 //var xmlParser = bodyParser.text({ type: '*/*' });
