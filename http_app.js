@@ -114,7 +114,7 @@ function ready_for_notification() {
                 }
             }
         }
-        mqtt_connect(conf.cse.host, gcs_noti_topic, noti_topic);
+        mqtt_connect(conf.cse.host, noti_topic);
     }
 }
 
@@ -199,11 +199,29 @@ function create_sub_all(count, callback) {
     }
 }
 
+var target_topic = [];
+var target_selected = 0;
+
 function retrieve_my_cnt_name(callback) {
     sh_adn.rtvct('/Mobius/UTM/steer/'+conf.ae.name+'/la', 0, function (rsc, res_body, count) {
         if(rsc == 2000) {
             var steer_info = res_body[Object.keys(res_body)[0]].con;
             console.log(steer_info);
+
+            var target_gcs = 'UTM_UVARC';
+            if(steer_info.hasOwnProperty('gcs')) {
+                target_gcs = steer_info.gcs;
+            }
+
+            if(steer_info.hasOwnProperty('target')) {
+                for(var cnt in steer_info.target) {
+                    if(steer_info.target.hasOwnProperty(cnt)) {
+                        target_topic[cnt] = '/Mobius/' + target_gcs + '/Drone_Data/' + steer_info.target[cnt] + '/#'
+                    }
+                }
+            }
+            //console.log(target_topic);
+
 /*
             conf.cnt = [];
 
@@ -476,7 +494,7 @@ setTimeout(http_watchdog, normal_interval);
 // for notification
 //var xmlParser = bodyParser.text({ type: '*/*' });
 
-function mqtt_connect(serverip, gcs_noti_topic, noti_topic) {
+function mqtt_connect(serverip, noti_topic) {
     if(mqtt_client == null) {
         if (conf.usesecure === 'disable') {
             var connectOptions = {
@@ -517,11 +535,15 @@ function mqtt_connect(serverip, gcs_noti_topic, noti_topic) {
     }
 
     mqtt_client.on('connect', function () {
-        mqtt_client.subscribe(gcs_noti_topic);
-        console.log('[mqtt_connect] gcs_noti_topic : ' + gcs_noti_topic);
+        if(noti_topic != '') {
+            mqtt_client.subscribe(noti_topic);
+            console.log('[mqtt_connect] noti_topic : ' + noti_topic);
+        }
 
-        mqtt_client.subscribe(noti_topic);
-        console.log('[mqtt_connect] noti_topic : ' + noti_topic);
+        if(target_topic.length > 0) {
+            mqtt_client.subscribe(target_topic[target_selected]);
+            console.log('[mqtt_connect] target_topic[' + target_selected + ']: ' + target_topic[target_selected]);
+        }
     });
 
     mqtt_client.on('message', function (topic, message) {

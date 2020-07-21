@@ -1,9 +1,9 @@
 /**
- * Created by Il Yeup, Ahn in KETI on 2017-02-25.
+ * Created by Il Yeup, Ahn in KETI on 2020-07-21.
  */
 
 /**
- * Copyright (c) 2018, OCEAN
+ * Copyright (c) 2020, OCEAN
  * All rights reserved.
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
  * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
@@ -18,6 +18,231 @@ var ip = require('ip');
 var moment = require('moment');
 
 var mavlink = require('./mavlibrary/mavlink.js');
+
+const keycode = {
+
+}
+
+const map = new Map();
+map.set(2, 'arm');
+map.set(3, 'takeoff');
+map.set(4, 'land');
+map.set(5, 'altitude_hold');
+map.set(11, 'disarm');
+map.set(17, 'throttle_high');
+map.set(30, 'yaw_left');
+map.set(31, 'throttle_low');
+map.set(32, 'yaw_right');
+map.set(61000, 'pitch_forward');
+map.set(61003, 'roll_left');
+map.set(61008, 'pitch_backward');
+map.set(61005, 'roll_right');
+
+const throttle_max = 1638;
+const throttle_min = 1438;
+const throttle_neutral = 1505
+var throttle_val = throttle_neutral;
+
+const yaw_max = 1638;
+const yaw_min = 1438;
+const yaw_neutral = 1505
+var yaw_val = yaw_neutral;
+
+
+// const readline = require('readline');
+//
+// readline.emitKeypressEvents(process.stdin);
+// if (process.stdin.setRawMode){
+//     process.stdin.setRawMode(true);
+// }
+//
+// // process.stdin.on('keypress', (key, data) => {
+// //     if (data.ctrl && data.name.toLowerCase() === 'c') {
+// //         process.exit();
+// //     } else {
+// //         console.log('key', key);
+// //         console.log('data', data);
+// //     }
+// // });
+// // console.log('Press a key');
+//
+//
+//
+// //console.log('Use the following key mappings or press ctrl-t to exit:')
+// for (const [key, value] of map.entries()) {
+//     console.log(`${key} = ${value}`);
+// }
+//
+// function key_listener(key, data) {
+//     // console.log(key);
+//     // console.log(data);
+//
+//     if (data.ctrl && data.name === 'c') {
+//         process.exit();
+//     }
+//     else if(data.meta) {
+//         if (map.has(data.name)) {
+//             const command = map.get(data.name);
+//
+//             console.log(command);
+//             // const result = getWeatherData(city, function (result) {
+//             //     console.log(result);
+//             // });
+//         }
+//         else {
+//             console.log(`"${data.name} is not defined as a key mapping.`);
+//         }
+//     }
+//     else {
+//         if (map.has(data.name)) {
+//             const command = map.get(data.name);
+//
+//             console.log(command + ': ' + throttle_val);
+//
+//             if(command === 'throttle_high') {
+//                 throttle_val++;
+//                 if(throttle_val >= throttle_max) {
+//                     throttle_val = throttle_max;
+//                 }
+//             }
+//         }
+//         else {
+//             console.log(`"${data.name} is not defined as a key mapping.`);
+//         }
+//     }
+// }
+//
+// // function getWeatherData(city, callback) {
+// //     const url = `http://api.openweathermap.org/data/2.5/weather?units=metric&appid=YOUR_API_KEY&q=${city}`;
+// //     const lib = require('http');
+// //     const request = lib.get(url, response => {
+// //         if (response.statusCode < 200 || response.statusCode > 299) {
+// //             callback('Failed to load page, status code: ' + response.statusCode);
+// //         }
+// //         const body = [];
+// //         response.on('data', chunk => body.push(chunk));
+// //         response.on('end', () => {
+// //             const data = body.join('');
+// //             const parsed = JSON.parse(data);
+// //             console.log(parsed);
+// //             callback(`The weather in ${city} is ${parsed.main.temp }°C.`);
+// //         });
+// //     });
+// //     request.on('error', function (err) {
+// //         callback('error');
+// //     });
+// // }
+//
+// process.stdin.on('keypress', key_listener);
+
+var alt_key_down = false;
+
+const ioHook = require('iohook');
+
+/* In next example we register CTRL+F7 shortcut (in MacOS, for other OS, keycodes can be some different). */
+
+const id = ioHook.registerShortcut([17, 32], (keys) => {
+    console.log('Shortcut called with keys:', keys)
+});
+
+ioHook.on("keydown", event => {
+    console.log(event);
+    /* You get object like this
+    {
+       shiftKey: true,
+       altKey: true,
+       ctrlKey: false,
+       metaKey: false
+       keycode: 46,
+       rawcode: 8,
+       type: 'keydown'
+     }
+    */
+
+    if(event.altKey === true) {
+    //     if (map.has(event.keycode)) {
+    //         const command = map.get(event.keycode);
+    //         console.log(command);
+    //     }
+    }
+    else {
+        if (map.has(event.keycode)) {
+            const command = map.get(event.keycode);
+
+            if(command === 'throttle_high') {
+                throttle_val++;
+                if(throttle_val >= throttle_max) {
+                    throttle_val = throttle_max;
+                }
+                console.log(command + ': ' + throttle_val);
+            }
+            else if(command === 'throttle_low') {
+                throttle_val--;
+                if(throttle_val <= throttle_min) {
+                    throttle_val = throttle_min;
+                }
+                console.log(command + ': ' + throttle_val);
+            }
+            else if(command === 'yaw_right') {
+                yaw_val++;
+                if(yaw_val >= yaw_max) {
+                    yaw_val = yaw_max;
+                }
+                console.log(command + ': ' + yaw_val);
+            }
+            else if(command === 'yaw_left') {
+                yaw_val--;
+                if(yaw_val <= yaw_min) {
+                    yaw_val = yaw_min;
+                }
+                console.log(command + ': ' + yaw_val);
+            }
+        }
+    }
+});
+
+ioHook.on("keyup", event => {
+    //console.log(event);
+    /* You get object like this
+    {
+       shiftKey: true,
+       altKey: true,
+       ctrlKey: false,
+       metaKey: false
+       keycode: 46,
+       rawcode: 8,
+       type: 'keydown'
+     }
+    */
+
+    if(event.altKey === true) {
+        if (map.has(event.keycode)) {
+            const command = map.get(event.keycode);
+            console.log(command);
+        }
+    }
+    else {
+        if (map.has(event.keycode)) {
+            const command = map.get(event.keycode);
+
+            if(command === 'throttle_high' || command === 'throttle_low') {
+                throttle_val = throttle_neutral;
+                console.log(command + ': ' + throttle_val);
+            }
+            else if(command === 'yaw_left' || command === 'yaw_right') {
+                yaw_val = yaw_neutral;
+                console.log(command + ': ' + yaw_val);
+            }
+        }
+    }
+});
+
+//register and start hook
+ioHook.start();
+
+// Alternatively, pass true to start in DEBUG mode.
+ioHook.start(true);
+
 
 var _server = null;
 
