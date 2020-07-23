@@ -33,10 +33,14 @@ map.set(17, 'throttle_high');
 map.set(30, 'yaw_left');
 map.set(31, 'throttle_low');
 map.set(32, 'yaw_right');
-map.set(61000, 'pitch_forward');
-map.set(61003, 'roll_left');
-map.set(61008, 'pitch_backward');
-map.set(61005, 'roll_right');
+map.set(103, 'pitch_forward');
+map.set(105, 'roll_left');
+map.set(108, 'pitch_backward');
+map.set(106, 'roll_right');
+// map.set(61000, 'pitch_forward');
+// map.set(61003, 'roll_left');
+// map.set(61008, 'pitch_backward');
+// map.set(61005, 'roll_right');
 
 const throttle_max = 1638;
 const throttle_min = 1438;
@@ -145,17 +149,12 @@ var roll_val = roll_neutral;
 //
 // process.stdin.on('keypress', key_listener);
 
-var alt_key_down = false;
 
-const ioHook = require('iohook');
-
+const InputEvent = require('input-event');
+const input = new InputEvent('/dev/input/event0');
+const keyboard = new InputEvent.Keyboard(input);
 /* In next example we register CTRL+F7 shortcut (in MacOS, for other OS, keycodes can be some different). */
-
-const id = ioHook.registerShortcut([17, 32], (keys) => {
-    console.log('Shortcut called with keys:', keys)
-});
-
-ioHook.on("keydown", event => {
+keyboard.on("keydown", event => {
     console.log(event);
     /* You get object like this
     {
@@ -169,15 +168,15 @@ ioHook.on("keydown", event => {
      }
     */
 
-    if(event.altKey === true) {
+    if(event.code === '56') {
     //     if (map.has(event.keycode)) {
     //         const command = map.get(event.keycode);
     //         console.log(command);
     //     }
     }
     else {
-        if (map.has(event.keycode)) {
-            const command = map.get(event.keycode);
+        if (map.has(event.code)) {
+            const command = map.get(event.code);
 
             if(command === 'throttle_high') {
                 throttle_val++;
@@ -239,7 +238,7 @@ ioHook.on("keydown", event => {
     }
 });
 
-ioHook.on("keyup", event => {
+keyboard.on("keyup", event => {
     //console.log(event);
     /* You get object like this
     {
@@ -253,15 +252,15 @@ ioHook.on("keyup", event => {
      }
     */
 
-    if(event.altKey === true) {
-        if (map.has(event.keycode)) {
-            const command = map.get(event.keycode);
+    if(event.code === '56') {
+        if (map.has(event.code)) {
+            const command = map.get(event.code);
             console.log(command);
         }
     }
     else {
-        if (map.has(event.keycode)) {
-            const command = map.get(event.keycode);
+        if (map.has(event.code)) {
+            const command = map.get(event.code);
 
             if(command === 'throttle_high' || command === 'throttle_low') {
                 throttle_val = throttle_neutral;
@@ -282,12 +281,146 @@ ioHook.on("keyup", event => {
         }
     }
 });
+// var alt_key_down = false;
 
-//register and start hook
-ioHook.start();
+// const ioHook = require('iohook');
+// const id = ioHook.registerShortcut([17, 32], (keys) => {
+//     console.log('Shortcut called with keys:', keys)
+// });
 
-// Alternatively, pass true to start in DEBUG mode.
-ioHook.start(true);
+// ioHook.on("keydown", event => {
+//     console.log(event);
+//     /* You get object like this
+//     {
+//        shiftKey: true,
+//        altKey: true,
+//        ctrlKey: false,
+//        metaKey: false
+//        keycode: 46,
+//        rawcode: 8,
+//        type: 'keydown'
+//      }
+//     */
+
+//     if(event.altKey === true) {
+//     //     if (map.has(event.keycode)) {
+//     //         const command = map.get(event.keycode);
+//     //         console.log(command);
+//     //     }
+//     }
+//     else {
+//         if (map.has(event.keycode)) {
+//             const command = map.get(event.keycode);
+
+//             if(command === 'throttle_high') {
+//                 throttle_val++;
+//                 if(throttle_val >= throttle_max) {
+//                     throttle_val = throttle_max;
+//                 }
+//                 console.log(command + ': ' + throttle_val);
+//             }
+//             else if(command === 'throttle_low') {
+//                 throttle_val--;
+//                 if(throttle_val <= throttle_min) {
+//                     throttle_val = throttle_min;
+//                 }
+//                 console.log(command + ': ' + throttle_val);
+//             }
+//             else if(command === 'yaw_right') {
+//                 yaw_val++;
+//                 if(yaw_val >= yaw_max) {
+//                     yaw_val = yaw_max;
+//                 }
+//                 console.log(command + ': ' + yaw_val);
+//             }
+//             else if(command === 'yaw_left') {
+//                 yaw_val--;
+//                 if(yaw_val <= yaw_min) {
+//                     yaw_val = yaw_min;
+//                 }
+//                 console.log(command + ': ' + yaw_val);
+//             }
+//             else if(command === 'pitch_forward') {
+//                 pitch_val++;
+//                 if(pitch_val >= pitch_max) {
+//                     pitch_val = pitch_max;
+//                 }
+//                 console.log(command + ': ' + pitch_val);
+//             }
+//             else if(command === 'pitch_backward') {
+//                 pitch_val--;
+//                 if(pitch_val <= pitch_min) {
+//                     pitch_val = pitch_min;
+//                 }
+//                 console.log(command + ': ' + pitch_val);
+//             }
+//             else if(command === 'roll_right') {
+//                 roll_val++;
+//                 if(roll_val >= roll_max) {
+//                     roll_val = roll_max;
+//                 }
+//                 console.log(command + ': ' + roll_val);
+//             }
+//             else if(command === 'roll_left') {
+//                 roll_val--;
+//                 if(roll_val <= roll_min) {
+//                     roll_val = roll_min;
+//                 }
+//                 console.log(command + ': ' + roll_val);
+//             }
+//         }
+//     }
+// });
+
+// ioHook.on("keyup", event => {
+//     //console.log(event);
+//     /* You get object like this
+//     {
+//        shiftKey: true,
+//        altKey: true,
+//        ctrlKey: false,
+//        metaKey: false
+//        keycode: 46,
+//        rawcode: 8,
+//        type: 'keydown'
+//      }
+//     */
+
+//     if(event.altKey === true) {
+//         if (map.has(event.keycode)) {
+//             const command = map.get(event.keycode);
+//             console.log(command);
+//         }
+//     }
+//     else {
+//         if (map.has(event.keycode)) {
+//             const command = map.get(event.keycode);
+
+//             if(command === 'throttle_high' || command === 'throttle_low') {
+//                 throttle_val = throttle_neutral;
+//                 console.log(command + ': ' + throttle_val);
+//             }
+//             else if(command === 'yaw_left' || command === 'yaw_right') {
+//                 yaw_val = yaw_neutral;
+//                 console.log(command + ': ' + yaw_val);
+//             }
+//             else if(command === 'pitch_forward' || command === 'pitch_backward') {
+//                 pitch_val = pitch_neutral;
+//                 console.log(command + ': ' + pitch_val);
+//             }
+//             else if(command === 'roll_left' || command === 'roll_right') {
+//                 roll_val = roll_neutral;
+//                 console.log(command + ': ' + roll_val);
+//             }
+//         }
+//     }
+// });
+
+// //register and start hook
+// ioHook.start();
+
+// // Alternatively, pass true to start in DEBUG mode.
+// ioHook.start(true);
 
 
 function send_joystick() {
