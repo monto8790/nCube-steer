@@ -48,6 +48,16 @@ const yaw_min = 1438;
 const yaw_neutral = 1505
 var yaw_val = yaw_neutral;
 
+const pitch_max = 1638;
+const pitch_min = 1438;
+const pitch_neutral = 1505
+var pitch_val = pitch_neutral;
+
+const roll_max = 1638;
+const roll_min = 1438;
+const roll_neutral = 1505
+var roll_val = roll_neutral;
+
 
 // const readline = require('readline');
 //
@@ -119,7 +129,7 @@ var yaw_val = yaw_neutral;
 // //         if (response.statusCode < 200 || response.statusCode > 299) {
 // //             callback('Failed to load page, status code: ' + response.statusCode);
 // //         }
-// //         const body = [];
+// //         const body = [wwwwwwwwwww];
 // //         response.on('data', chunk => body.push(chunk));
 // //         response.on('end', () => {
 // //             const data = body.join('');
@@ -197,6 +207,34 @@ ioHook.on("keydown", event => {
                 }
                 console.log(command + ': ' + yaw_val);
             }
+            else if(command === 'pitch_forward') {
+                pitch_val++;
+                if(pitch_val >= pitch_max) {
+                    pitch_val = pitch_max;
+                }
+                console.log(command + ': ' + pitch_val);
+            }
+            else if(command === 'pitch_backward') {
+                pitch_val--;
+                if(pitch_val <= pitch_min) {
+                    pitch_val = pitch_min;
+                }
+                console.log(command + ': ' + pitch_val);
+            }
+            else if(command === 'roll_right') {
+                roll_val++;
+                if(roll_val >= roll_max) {
+                    roll_val = roll_max;
+                }
+                console.log(command + ': ' + roll_val);
+            }
+            else if(command === 'roll_left') {
+                roll_val--;
+                if(roll_val <= roll_min) {
+                    roll_val = roll_min;
+                }
+                console.log(command + ': ' + roll_val);
+            }
         }
     }
 });
@@ -233,6 +271,14 @@ ioHook.on("keyup", event => {
                 yaw_val = yaw_neutral;
                 console.log(command + ': ' + yaw_val);
             }
+            else if(command === 'pitch_forward' || command === 'pitch_backward') {
+                pitch_val = pitch_neutral;
+                console.log(command + ': ' + pitch_val);
+            }
+            else if(command === 'roll_left' || command === 'roll_right') {
+                roll_val = roll_neutral;
+                console.log(command + ': ' + roll_val);
+            }
         }
     }
 });
@@ -243,6 +289,49 @@ ioHook.start();
 // Alternatively, pass true to start in DEBUG mode.
 ioHook.start(true);
 
+
+function send_joystick() {
+    var rc_params = {};
+    rc_params.target_system = 20;
+    rc_params.target_component = 1;
+    rc_params.chan1_raw = throttle_val;
+    rc_params.chan2_raw = yaw_val;
+    rc_params.chan3_raw = pitch_val;
+    rc_params.chan4_raw = roll_val;
+    rc_params.chan5_raw = 0;
+    rc_params.chan6_raw = 0;
+    rc_params.chan7_raw = 0;
+    rc_params.chan8_raw = 0;
+    rc_params.chan9_raw = 0;
+    rc_params.chan10_raw = 0;
+    rc_params.chan11_raw = 0;
+    rc_params.chan12_raw = 0;
+    rc_params.chan13_raw = 0;
+    rc_params.chan14_raw = 0;
+    rc_params.chan15_raw = 0;
+    rc_params.chan16_raw = 0;
+    rc_params.chan17_raw = 0;
+    rc_params.chan18_raw = 0;
+
+    try {
+        var msg = mavlinkGenerateMessage(mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE, rc_params);
+        if (msg == null) {
+            console.log("mavlink message is null");
+        }
+        else {
+            console.log('msg: ', msg);
+            // console.log('msg_seq : ', msg.slice(2,3));
+            //mqtt_client.publish(my_cnt_name, msg.toString('hex'));
+            //_this.send_aggr_to_Mobius(my_cnt_name, msg.toString('hex'), 1500);
+            mqtt_client.publish(target_pub_topic[target_selected], msg);
+
+            setTimeout(send_joystick, 200);
+        }
+    }
+    catch( ex ) {
+        console.log( '[ERROR] ' + ex );
+    }
+}
 
 var _server = null;
 
@@ -255,43 +344,7 @@ var ltePortNum = '/dev/ttyUSB1';
 var lteBaudrate = '115200';
 
 exports.ready = function tas_ready() {
-    if(my_drone_type === 'dji') {
-        if (_server == null) {
-            _server = net.createServer(function (socket) {
-                console.log('socket connected');
-                socket.id = Math.random() * 1000;
-
-                socket.on('data', dji_handler);
-
-                socket.on('end', function () {
-                    console.log('end');
-                });
-
-                socket.on('close', function () {
-                    console.log('close');
-                });
-
-                socket.on('error', function (e) {
-                    console.log('error ', e);
-                });
-            });
-        }
-
-        _server.listen(conf.ae.tas_mav_port, function () {
-            console.log('TCP Server (' + ip.address() + ') for TAS is listening on port ' + conf.ae.tas_mav_port);
-
-            setTimeout(dji_sdk_lunch, 1500);
-        });
-    }
-    else if(my_drone_type === 'pixhawk') {
-        mavPortNum = '/dev/ttyUSB5';
-        mavBaudrate = '57600';
-        mavPortOpening();
-    }
-
-    ltePortNum = '/dev/ttyUSB1';
-    lteBaudrate = '115200';
-    ltePortOpening();
+    setTimeout(send_joystick, 200);
 };
 
 var spawn = require('child_process').spawn;
@@ -407,6 +460,29 @@ function mavlinkGenerateMessage(type, params) {
                     params.vz,
                     params.hdg);
                 break;
+            case mavlink.MAVLINK_MSG_ID_RC_CHANNELS_OVERRIDE:
+                mavMsg = new mavlink.messages.rc_channels_override(params.time_boot_ms,
+                    params.target_system,
+                    params.target_component,
+                    params.chan1_raw,
+                    params.chan2_raw,
+                    params.chan3_raw,
+                    params.chan4_raw,
+                    params.chan5_raw,
+                    params.chan6_raw,
+                    params.chan7_raw,
+                    params.chan8_raw,
+                    params.chan9_raw,
+                    params.chan10_raw,
+                    params.chan11_raw,
+                    params.chan12_raw,
+                    params.chan13_raw,
+                    params.chan14_raw,
+                    params.chan15_raw,
+                    params.chan16_raw,
+                    params.chan17_raw,
+                    params.chan18_raw);
+                break;
         }
     }
     catch( e ) {
@@ -414,7 +490,7 @@ function mavlinkGenerateMessage(type, params) {
     }
 
     if (mavMsg) {
-        genMsg = new Buffer(mavMsg.pack(mavlinkParser));
+        genMsg = Buffer.from(mavMsg.pack(mavlinkParser));
         //console.log('>>>>> MAVLINK OUTGOING MSG: ' + genMsg.toString('hex'));
     }
 
@@ -636,7 +712,7 @@ function mavPortData(data) {
                 }
 
                 if(refLen == mavPacket.length) {
-                    mqtt_client.publish(my_cnt_name, new Buffer.from(mavPacket, 'hex'));
+                    mqtt_client.publish(my_cnt_name, Buffer.from(mavPacket, 'hex'));
                     send_aggr_to_Mobius(my_cnt_name, mavPacket, 1500);
                     mavStrPacket = '';
 
@@ -720,7 +796,7 @@ function parseMav(mavPacket) {
                     tr_ch[5 + idx] = parseInt(mavPacket.substr(idx*2, 2), 16);
                 }
 
-                const message = new Buffer.from(tr_ch.buffer);
+                const message = Buffer.from(tr_ch.buffer);
                 secPort.write(message);
             }
         }
@@ -774,7 +850,7 @@ function parseMav(mavPacket) {
         //             tr_ch[5 + idx] = parseInt(mavPacket.substr((10 + idx) * 2, 2), 16);
         //         }
         //
-        //         const message = new Buffer.from(tr_ch.buffer);
+        //         const message = Buffer.from(tr_ch.buffer);
         //         secPort.write(message);
         //     }
         // }
@@ -795,7 +871,7 @@ function parseMav(mavPacket) {
                     tr_ch[5 + idx] = parseInt(mavPacket.substr(idx*2, 2), 16);
                 }
 
-                const message = new Buffer.from(tr_ch.buffer);
+                const message = Buffer.from(tr_ch.buffer);
                 secPort.write(message);
             }
         }
@@ -927,8 +1003,8 @@ function ltePortError(error) {
 function lteReqGetRssi() {
     if(ltePort != null) {
         if (ltePort.isOpen) {
-            //var message = new Buffer.from('AT+CSQ\r');
-            var message = new Buffer.from('AT@DBG\r');
+            //var message = Buffer.from('AT+CSQ\r');
+            var message = Buffer.from('AT@DBG\r');
             ltePort.write(message);
         }
     }

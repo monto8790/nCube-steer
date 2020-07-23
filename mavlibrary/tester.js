@@ -215,7 +215,7 @@ function mavlinkGenerateMessage(sysId, type, params) {
   }
 
   if (mavMsg) {
-    genMsg = new Buffer(mavMsg.pack(mavlinkParser));
+    genMsg = Buffer.from(mavMsg.pack(mavlinkParser));
     //console.log('>>>>> MAVLINK OUTGOING MSG: ' + genMsg.toString('hex'));
   }
 

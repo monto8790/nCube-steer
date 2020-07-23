@@ -199,9 +199,9 @@ function create_sub_all(count, callback) {
     }
 }
 
-var target_topic = [];
-var target_selected = 0;
-
+global.target_sub_topic = [];
+global.target_selected = 0;
+global.target_pub_topic = [];
 function retrieve_my_cnt_name(callback) {
     sh_adn.rtvct('/Mobius/UTM/steer/'+conf.ae.name+'/la', 0, function (rsc, res_body, count) {
         if(rsc == 2000) {
@@ -216,11 +216,12 @@ function retrieve_my_cnt_name(callback) {
             if(steer_info.hasOwnProperty('target')) {
                 for(var cnt in steer_info.target) {
                     if(steer_info.target.hasOwnProperty(cnt)) {
-                        target_topic[cnt] = '/Mobius/' + target_gcs + '/Drone_Data/' + steer_info.target[cnt] + '/#'
+                        target_sub_topic[cnt] = '/Mobius/' + target_gcs + '/Drone_Data/' + steer_info.target[cnt] + '/#';
+                        target_pub_topic[cnt] = '/Mobius/' + target_gcs + '/GCS_Data/' + steer_info.target[cnt];
                     }
                 }
             }
-            //console.log(target_topic);
+            //console.log(target_sub_topic);
 
 /*
             conf.cnt = [];
@@ -540,9 +541,9 @@ function mqtt_connect(serverip, noti_topic) {
             console.log('[mqtt_connect] noti_topic : ' + noti_topic);
         }
 
-        if(target_topic.length > 0) {
-            mqtt_client.subscribe(target_topic[target_selected]);
-            console.log('[mqtt_connect] target_topic[' + target_selected + ']: ' + target_topic[target_selected]);
+        if(target_sub_topic.length > 0) {
+            mqtt_client.subscribe(target_sub_topic[target_selected]);
+            console.log('[mqtt_connect] target_sub_topic[' + target_selected + ']: ' + target_sub_topic[target_selected]);
         }
     });
 
